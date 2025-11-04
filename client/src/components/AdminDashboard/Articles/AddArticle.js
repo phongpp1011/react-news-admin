@@ -18,7 +18,7 @@ function AddArticle() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  //  Lấy danh sách danh mục từ Database
+  //  Lấy danh sách danh mục từ DB
   useEffect(() => {
     axios
       .get("http://localhost:8081/categories")

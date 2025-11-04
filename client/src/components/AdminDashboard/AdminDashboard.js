@@ -3,8 +3,8 @@ import { Routes, Route } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
 import AdminFooter from "./AdminFooter";
-import ArticlesList from "./Articles/ArticlesList"; //  Import danh sách bài viết
-import AddArticle from "./Articles/AddArticle"; //  Import thêm bài viết
+import ArticlesList from "./Articles/ArticlesList"; 
+import AddArticle from "./Articles/AddArticle";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";

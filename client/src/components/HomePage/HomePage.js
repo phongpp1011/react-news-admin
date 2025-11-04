@@ -5,8 +5,6 @@ import MainNews from "./MainNews";
 import WeeklyNews from "./WeeklyNews";
 import WhatsNew from "./WhatsNew";
 import Footer from "./Footer";
-
-// Import CSS gốc (nếu bạn có trong assets)
 import "../../assets/css/bootstrap.min.css";
 import "../../assets/css/style.css";
 import "slick-carousel/slick/slick.css";
