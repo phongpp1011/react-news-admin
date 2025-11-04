@@ -1,0 +1,270 @@
+/*--------------------------------------------------------------
+>>> TABLE OF CONTENTS:
+----------------------------------------------------------------
+1.0 Default CSS
+2.0 Header
+3.0 Slider
+4.0 Trending
+5.0 What's New
+6.0 Weekly News
+7.0 Footer
+--------------------------------------------------------------*/
+
+/* =============== Background overrides =============== */
+/* Thay thế các hình nền bị thiếu bằng màu nền tương đương */
+.bg-img-1 {
+  background-color: #f4f4f4; /* Trước đây: url(../img/slider/slider-img-1.jpg) */
+}
+
+.bg-img-2 {
+  background-color: #f9f9f9; /* Trước đây: url(../img/background-img/bg-img-2.jpg) */
+}
+
+.cta-bg-1 {
+  background-color: #eeeeee; /* Trước đây: url(../img/background-img/bg-img-3.jpg) */
+}
+
+.bradcam-bg-1 {
+  background-color: #f2f2f2; /* Trước đây: url(../img/banner/bradcam.png) */
+}
+
+.bradcam-bg-2 {
+  background-color: #f0f0f0; /* Trước đây: url(../img/banner/bradcam2.png) */
+}
+
+.bradcam-bg-3 {
+  background-color: #ededed; /* Trước đây: url(../img/banner/bradcam3.png) */
+}
+
+/* =============== Global Resets & Base =============== */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto", Arial, sans-serif;
+  background-color: #fff;
+  color: #222;
+  line-height: 1.6;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* =============== Header Area =============== */
+.header-area {
+  width: 100%;
+  background-color: #fff;
+  z-index: 999;
+}
+
+.header-top {
+  background-color: #000;
+  color: #fff;
+  padding: 5px 0;
+  font-size: 14px;
+}
+
+.header-top ul {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-info-left ul li img {
+  width: 18px;
+  margin-right: 5px;
+}
+
+.header-info-right .header-social li {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.header-info-right .header-social a {
+  color: #fff;
+  transition: 0.3s;
+}
+
+.header-info-right .header-social a:hover {
+  color: #ff3d3d;
+}
+
+/* =============== Main Header =============== */
+.main-header {
+  border-bottom: 1px solid #eee;
+}
+
+.logo img {
+  height: 60px;
+}
+
+.header-banner img {
+  border-radius: 4px;
+  width: 100%;
+}
+
+/* =============== Navigation =============== */
+.main-menu nav ul {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 25px;
+}
+
+.main-menu nav ul li {
+  position: relative;
+}
+
+.main-menu nav ul li a {
+  color: #222;
+  font-weight: 500;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+.main-menu nav ul li a:hover {
+  color: #ff4d4d;
+}
+
+/* Submenu dropdown */
+.main-menu nav ul li ul.submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px 0;
+  min-width: 200px;
+  display: none;
+  z-index: 100;
+}
+
+.main-menu nav ul li:hover ul.submenu {
+  display: block;
+}
+
+.main-menu nav ul li ul.submenu li {
+  padding: 8px 20px;
+}
+
+.main-menu nav ul li ul.submenu li a {
+  color: #333;
+  font-size: 15px;
+}
+
+.main-menu nav ul li ul.submenu li a:hover {
+  color: #ff4d4d;
+}
+
+/* =============== Search Box =============== */
+.search-box {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #fff;
+  border-radius: 5px;
+  padding: 10px;
+  display: none;
+  width: 220px;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header-right-btn:hover .search-box {
+  display: block;
+}
+
+.search-box input {
+  width: 100%;
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+/* =============== Trending Section =============== */
+.trending-area {
+  background-color: #f8f9fa;
+  padding: 10px 0;
+}
+
+.trending-title strong {
+  font-size: 18px;
+  color: #ff4d4d;
+}
+
+.trending-tittle span {
+  font-size: 14px;
+  color: #333;
+}
+
+/* =============== Cards & News Layout =============== */
+.card {
+  transition: all 0.3s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.badge.bg-danger {
+  background-color: #ff4d4d !important;
+}
+
+/* =============== Footer =============== */
+.footer-area {
+  background-color: #1b1b1b;
+  color: #ccc;
+  padding: 60px 0;
+}
+
+.footer-logo img {
+  height: 50px;
+  margin-bottom: 20px;
+}
+
+.footer-tittle h4 {
+  color: #fff;
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.footer-tittle ul li a {
+  color: #ccc;
+  transition: 0.3s;
+}
+
+.footer-tittle ul li a:hover {
+  color: #ff4d4d;
+}
+
+.footer-social a {
+  display: inline-block;
+  margin-right: 10px;
+  font-size: 18px;
+  color: #ccc;
+  transition: 0.3s;
+}
+
+.footer-social a:hover {
+  color: #ff4d4d;
+}
+
+.footer-copy-right {
+  color: #999;
+  font-size: 14px;
+  margin-top: 30px;
+}
