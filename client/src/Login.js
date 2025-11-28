@@ -31,6 +31,7 @@ function Login({ setRole }) {
         // Lưu role riêng để App.js đọc
         localStorage.setItem('role', res.data.role);
         localStorage.setItem('user', JSON.stringify(res.data));
+        
         setRole(res.data.role);
 
         if (res.data.role === 'admin') navigate('/admin');

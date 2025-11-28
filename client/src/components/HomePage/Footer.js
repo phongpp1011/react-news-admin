@@ -106,7 +106,7 @@ function Footer() {
               <div className="footer-copy-right text-center mt-4">
                 <p>
                   © 2025 <strong>NewsPortal</strong>. All rights reserved | Designed
-                  for your graduation project 💡
+                  for your graduation project 
                 </p>
               </div>
             </div>

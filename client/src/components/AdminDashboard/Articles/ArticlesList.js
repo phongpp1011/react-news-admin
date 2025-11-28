@@ -1,111 +1,125 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function ArticlesList() {
   const [articles, setArticles] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [filtered, setFiltered] = useState([]); // danh sách sau khi lọc
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   useEffect(() => {
     fetchArticles(page);
-  }, [page, categoryFilter, search]);
+  }, [page]);
 
-  const fetchCategories = () => {
-    axios
-      .get("http://localhost:8081/categories")
-      .then((res) => {
-        if (res.data.success) setCategories(res.data.categories);
-      })
-      .catch((err) => console.error("Lỗi API:", err));
+  // Lọc realtime khi search thay đổi
+  useEffect(() => {
+    if (!search.trim()) {
+      setFiltered(articles);
+    } else {
+      setFiltered(
+        articles.filter((item) =>
+          item.title.toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    }
+  }, [search, articles]);
+
+  const fetchArticles = async (pageNumber) => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8081/admin/articles?page=${pageNumber}`
+      );
+
+      if (res.data.success) {
+        setArticles(res.data.articles);
+        setFiltered(res.data.articles); // load ban đầu
+        setTotalPages(res.data.totalPages);
+      }
+    } catch (err) {
+      console.error("Lỗi API:", err);
+    }
   };
 
-  const fetchArticles = (pageNumber) => {
-    axios
-      .get("http://localhost:8081/admin/articles", {
-        params: {
-          page: pageNumber,
-          search,
-          category: categoryFilter,
-        },
-      })
-      .then((res) => {
-        if (res.data.success) {
-          setArticles(res.data.articles);
-          setTotalPages(res.data.totalPages);
-        }
-      })
-      .catch((err) => console.error(err));
+  const deleteArticle = async (id) => {
+    if (!window.confirm("Bạn có chắc muốn xóa bài viết này không?")) return;
+
+    try {
+      const res = await axios.delete(`http://localhost:8081/articles/${id}`);
+      if (res.data.success) {
+        alert("Xóa bài viết thành công!");
+        fetchArticles(page);
+      }
+    } catch (err) {
+      alert("Lỗi khi xóa bài viết!");
+      console.error(err);
+    }
   };
 
-  const deleteArticle = (id) => {
-    if (!window.confirm("Bạn chắc muốn xóa bài viết này?")) return;
-    axios.delete(`http://localhost:8081/articles/${id}`).then((res) => {
-      if (res.data.success) fetchArticles(page);
-    });
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await axios.put(`http://localhost:8081/articles/${id}`, {
+        status: newStatus,
+      });
+
+      alert("Cập nhật trạng thái thành công!");
+      fetchArticles(page);
+    } catch (err) {
+      console.error("Lỗi cập nhật trạng thái:", err);
+    }
   };
 
   const getImageUrl = (img) =>
-    !img
-      ? "/noimage.png"
-      : img.startsWith("http")
-      ? img
-      : `http://localhost:8081${img}`;
+    img ? `http://localhost:8081${img}` : "/noimage.png";
 
   return (
+    
+
     <div className="container mt-4">
-      {/* Header + Add button */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>Quản lý bài viết</h2>
+
+      <button
+        className="btn btn-secondary mb-3"
+        onClick={() => navigate("/admin")}
+      >
+        Quay lại Admin
+      </button>
+
+<button
+  className="btn btn-success mb-3"
+  onClick={() => {
+    axios.get("http://localhost:8081/aggregate/rss")
+      .then(res => alert("Đã tổng hợp " + res.data.count + " bài!"))
+      .catch(() => alert("Lỗi khi tổng hợp tin tức!"));
+  }}
+>
+   Tổng hợp bài từ VNExpress
+</button>
+
+      <h2>Quản lý bài viết</h2>
+
+      {/*  Thanh tìm kiếm realtime */}
+      <div className="mb-3">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Tìm bài viết theo tiêu đề..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="text-end mb-3">
         <Link to="/admin/articles/add" className="btn btn-primary">
-          + Thêm bài viết
+          Thêm bài viết
         </Link>
       </div>
 
-      {/* Search + Category Filter */}
-      <div className="row mb-3">
-        <div className="col-md-6 mb-2">
-          <input
-            type="text"
-            placeholder=" Tìm theo tiêu đề..."
-            className="form-control"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
-        </div>
-
-        <div className="col-md-4 mb-2">
-          <select
-            className="form-select"
-            value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value=""> Tất cả danh mục</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Table */}
-      <table className="table table-bordered align-middle">
-        <thead className="table-dark text-center">
+      <table className="table table-bordered">
+        <thead className="table-dark">
           <tr>
             <th>Ảnh</th>
             <th>Tiêu đề</th>
@@ -113,89 +127,97 @@ function ArticlesList() {
             <th>Lượt xem</th>
             <th>Trạng thái</th>
             <th>Ngày đăng</th>
-            <th style={{ width: "130px" }}>Hành động</th>
+            <th>Hành động</th>
           </tr>
         </thead>
+
         <tbody>
-          {articles.length > 0 ? (
-            articles.map((item) => (
-              <tr key={item.id}>
-                <td className="text-center">
-                  <img
-                    src={getImageUrl(item.image)}
-                    alt={item.title}
-                    style={{
-                      width: "80px",
-                      height: "55px",
-                      borderRadius: "5px",
-                      objectFit: "cover",
-                    }}
-                  />
-                </td>
-                <td>{item.title}</td>
-                <td>{item.category_name || "—"}</td>
-                <td className="text-center">{item.views || 0}</td>
-                <td className="text-center">
-                  <span
-                    className={`badge ${
-                      item.status === "published" ? "bg-success" : "bg-secondary"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                </td>
-                <td className="text-center">
-                  {item.published_at &&
-                    new Date(item.published_at).toLocaleDateString("vi-VN")}
-                </td>
-                <td className="text-center">
-                  <Link
-                    to={`/admin/articles/edit/${item.id}`}
-                    className="btn btn-warning btn-sm me-2"
-                  >
-                    Sửa
-                  </Link>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => deleteArticle(item.id)}
-                  >
-                    Xoá
-                  </button>
-                </td>
-              </tr>
-            ))
-          ) : (
+          {filtered.map((item) => (
+            <tr key={item.id}>
+              <td style={{ width: "90px" }}>
+                <img
+                  src={getImageUrl(item.image)}
+                  style={{
+                    width: "80px",
+                    height: "55px",
+                    objectFit: "cover",
+                    borderRadius: "4px",
+                  }}
+                />
+              </td>
+
+              <td>{item.title}</td>
+              <td>{item.category_name || "—"}</td>
+              <td>{item.views}</td>
+
+              <td>
+                <select
+                  value={item.status}
+                  className="form-select form-select-sm"
+                  onChange={(e) =>
+                    handleStatusChange(item.id, e.target.value)
+                  }
+                >
+                  <option value="draft">Bản nháp</option>
+                  <option value="published">Xuất bản</option>
+                </select>
+              </td>
+
+              <td>
+                {new Date(item.published_at).toLocaleDateString("vi-VN")}
+              </td>
+
+              <td>
+                <Link
+                  to={`/admin/articles/edit/${item.id}`}
+                  className="btn btn-warning btn-sm me-2"
+                >
+                  Sửa
+                </Link>
+
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => deleteArticle(item.id)}
+                >
+                  Xóa
+                </button>
+              </td>
+            </tr>
+          ))}
+
+          {filtered.length === 0 && (
             <tr>
-              <td colSpan="7" className="text-center py-3 text-muted">
-                Không có bài viết
+              <td colSpan="7" className="text-center text-muted">
+                Không tìm thấy bài viết phù hợp.
               </td>
             </tr>
           )}
         </tbody>
       </table>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="d-flex justify-content-between align-items-center mt-2">
-          <button
-            className="btn btn-outline-dark"
-            onClick={() => setPage((p) => p - 1)}
-            disabled={page === 1}
-          >
-            Trang trước
-          </button>
-          <span className="fw-bold">
-            Trang {page}/{totalPages}
-          </span>
-          <button
-            className="btn btn-outline-dark"
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page === totalPages}
-          >
-            Trang sau 
-          </button>
-        </div>
-      )}
+      {/* Phân trang */}
+      <div className="d-flex justify-content-between mt-3">
+        <button
+          className="btn btn-outline-dark"
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Trang trước
+        </button>
+
+        <span>
+          Trang {page} / {totalPages}
+        </span>
+        
+
+        <button
+          className="btn btn-outline-dark"
+          disabled={page === totalPages}
+          onClick={() => setPage(page + 1)}
+        >
+          Trang sau
+        </button>
+      </div>
     </div>
   );
 }

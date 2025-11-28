@@ -9,14 +9,14 @@ function AdminSidebar() {
 
       <hr className="sidebar-divider my-0" />
 
-      <li className="nav-item active">
+      {/* <li className="nav-item active">
         <a className="nav-link" href="/admin">
           <span>Dashboard</span>
         </a>
-      </li>
+      </li> */}
 
-      <hr className="sidebar-divider" />
-      <div className="sidebar-heading">Quản lý</div>
+      {/* <hr className="sidebar-divider" />
+      <div className="sidebar-heading">Quản lý</div> */}
 
       {/* Quản lý bài viết */}
       <li className="nav-item">

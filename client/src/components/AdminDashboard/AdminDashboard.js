@@ -3,8 +3,9 @@ import { Routes, Route } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
 import AdminFooter from "./AdminFooter";
-import ArticlesList from "./Articles/ArticlesList"; 
+import ArticlesList from "./Articles/ArticlesList";
 import AddArticle from "./Articles/AddArticle";
+import CommentsList from "./Comments/CommentsList"; //  Thêm import
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -21,10 +22,10 @@ function AdminDashboard({ setRole }) {
           {/* Topbar */}
           <AdminTopbar setRole={setRole} />
 
-          {/*  Router hiển thị nội dung từng trang Admin */}
+          {/* Router hiển thị nội dung từng trang Admin */}
           <div className="container-fluid" id="container-wrapper">
             <Routes>
-              {/*  Mặc định hiển thị Dashboard nếu truy cập /admin */}
+              {/* Mặc định hiển thị Dashboard nếu truy cập /admin */}
               <Route
                 path="/"
                 element={
@@ -148,11 +149,14 @@ function AdminDashboard({ setRole }) {
                 }
               />
 
-              {/*  Danh sách bài viết */}
+              {/* Danh sách bài viết */}
               <Route path="articles" element={<ArticlesList />} />
 
-              {/*  Thêm bài viết */}
+              {/* Thêm bài viết */}
               <Route path="articles/add" element={<AddArticle />} />
+
+              {/*  Quản lý bình luận */}
+              <Route path="comments" element={<CommentsList />} />
             </Routes>
           </div>
         </div>

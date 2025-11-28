@@ -14,8 +14,8 @@ function Header() {
 
   // Load user & categories khi component mount
   useEffect(() => {
-    const savedUser = localStorage.getItem("news_user");
-    if (savedUser) setUser(savedUser);
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) setUser(JSON.parse(savedUser).email);
 
     axios
       .get("http://localhost:8081/categories")
@@ -89,26 +89,27 @@ function Header() {
 
                   {/* User Info */}
                   {user ? (
-                    <div className="d-flex align-items-center gap-2">
-                      <span style={{ color: "#fff", fontWeight: "bold" }}>
-                        Xin chào, {user}
-                      </span>
-                      <button
-                        className="btn btn-sm btn-outline-light"
-                        onClick={handleLogout}
-                        title="Logout"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      className="btn btn-sm btn-outline-light"
-                      onClick={() => navigate("/login")}
-                    >
-                      Login
-                    </button>
-                  )}
+  <div className="d-flex align-items-center gap-2">
+    <span style={{ color: "#fff", fontWeight: "bold" }}>
+      Xin chào, {user}
+    </span>
+    <button
+      className="btn btn-sm btn-outline-light"
+      onClick={handleLogout}
+      title="Logout"
+    >
+      Logout
+    </button>
+  </div>
+) : (
+  <button
+    className="btn btn-sm btn-outline-light"
+    onClick={() => navigate("/login")}
+  >
+    Login
+  </button>
+)}
+
                 </div>
               </div>
             </div>
@@ -120,10 +121,11 @@ function Header() {
               <div className="row d-flex align-items-center">
                 <div className="col-xl-3 col-lg-3 col-md-3">
                   <div className="logo">
-                    <a href="/">
-                      <img src="/assets/img/logo/logo.png" alt="logo" />
+                    <a href="/" style={{ textDecoration: "none", fontSize: "28px", fontWeight: "bold", color: "#333" }}>
+                      PhongNews
                     </a>
                   </div>
+
                 </div>
                 <div className="col-xl-9 col-lg-9 col-md-9">
                   <div className="header-banner f-right">
@@ -211,7 +213,7 @@ function Header() {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="🔍 Tìm kiếm bài viết..."
+                      placeholder=" Tìm kiếm bài viết..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       style={{

@@ -9,18 +9,24 @@ function MainNews() {
   const [loading, setLoading] = useState(true);
 
   const getImageUrl = (image) => {
-    if (!image) return "/default.jpg";
-    return `http://localhost:8081/${image.replace(/^\//, "")}`;
+    if (!image) return "/default.jpg"; // ảnh mặc định nếu không có
+    return image.startsWith("http") ? image : `http://localhost:8081/${image.replace(/^\//, "")}`;
   };
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8081/articles/main")
-      .then((res) => {
-        if (res.data.success) setArticles(res.data.articles);
-      })
-      .catch(() => console.error("Lỗi khi tải main news"))
-      .finally(() => setLoading(false));
+    const fetchArticles = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get("http://localhost:8081/articles/main"); // lấy 5 bài mới nhất từ DB
+        if (res.data.success) setArticles(res.data.articles || []);
+      } catch (err) {
+        console.error("Lỗi khi tải main news:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticles();
   }, []);
 
   if (loading)

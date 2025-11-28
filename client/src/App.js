@@ -80,9 +80,9 @@ function App() {
         />
 
         <Route
-  path="/admin/articles/edit/:id"
-  element={role === "admin" ? <EditArticle /> : <Navigate to="/login" />}
-/>
+          path="/admin/articles/edit/:id"
+          element={role === "admin" ? <EditArticle /> : <Navigate to="/login" replace />}
+        />
 
 
         {/* ✅ 404 → Home */}

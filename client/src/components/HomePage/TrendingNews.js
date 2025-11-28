@@ -20,16 +20,16 @@ function TrendingNews() {
             <div className="trending-tittle">
               <Marquee gradient={false} speed={60}>
                 <span style={{ marginRight: "50px" }}>
-                  🔥 Tin nóng: Chính phủ vừa công bố gói hỗ trợ kinh tế mới dành cho doanh nghiệp nhỏ và vừa.
+                   Tin nóng: Chính phủ vừa công bố gói hỗ trợ kinh tế mới dành cho doanh nghiệp nhỏ và vừa.
                 </span>
                 <span style={{ marginRight: "50px" }}>
-                  ⚽ Bóng đá: Đội tuyển Việt Nam thắng đậm 3-0 trong trận giao hữu quốc tế.
+                   Bóng đá: Đội tuyển Việt Nam thắng đậm 3-0 trong trận giao hữu quốc tế.
                 </span>
                 <span style={{ marginRight: "50px" }}>
-                  🎬 Giải trí: Bom tấn “Hành tinh Z” xác nhận ngày khởi chiếu toàn cầu.
+                   Giải trí: Bom tấn “Hành tinh Z” xác nhận ngày khởi chiếu toàn cầu.
                 </span>
                 <span style={{ marginRight: "50px" }}>
-                  💻 Công nghệ: React 19 chính thức phát hành, hiệu năng vượt trội hơn 30%.
+                   Công nghệ: React 19 chính thức phát hành, hiệu năng vượt trội hơn 30%.
                 </span>
               </Marquee>
             </div>
