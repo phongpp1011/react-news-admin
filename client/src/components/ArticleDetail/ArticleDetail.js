@@ -11,259 +11,396 @@ function ArticleDetail() {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  //  Bình luận
+  // Bình luận
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
+  const [replyContent, setReplyContent] = useState("");
+  const [activeReply, setActiveReply] = useState(null);
 
-  // Lấy user email từ localStorage
+  // Filter
+  const [filter, setFilter] = useState("all");
+
+  // User
   const user = JSON.parse(localStorage.getItem("user"));
   const userEmail = user?.email || "Khách";
 
-  // Xử lý ảnh
   const getImageUrl = (img) =>
     img?.startsWith("http") ? img : `http://localhost:8081${img}`;
 
-  // ==============================
-  //    LẤY THÔNG TIN BÀI VIẾT
-  // ==============================
+  // ============================
+  //        LẤY BÀI VIẾT
+  // ============================
   useEffect(() => {
-    let didCancel = false;
+    let stop = false;
 
-    const fetchArticle = async () => {
+    const fetch = async () => {
       try {
         const res = await axios.get(`http://localhost:8081/articles/${slug}`);
-        if (!didCancel && res.data.success) {
+        if (!stop && res.data.success) {
           setArticle(res.data.article);
 
-          // Tăng view 1 lần duy nhất khi mở trang
           await axios.post(`http://localhost:8081/articles/increase-view`, {
             slug,
           });
 
-          // Cập nhật local article view để UI hiển thị ngay
           setArticle((prev) => ({
             ...prev,
             views: prev.views + 1,
           }));
-        } else if (!didCancel) {
-          setArticle(null);
         }
-      } catch (err) {
-        console.error("Lỗi khi tải bài viết:", err);
-        if (!didCancel) setArticle(null);
+      } catch (e) {
+        console.error(e);
       } finally {
-        if (!didCancel) setLoading(false);
+        if (!stop) setLoading(false);
       }
     };
 
-    fetchArticle();
-
-    return () => {
-      didCancel = true; // tránh cập nhật state sau khi unmount
-    };
+    fetch();
+    return () => (stop = true);
   }, [slug]);
 
-  // ==============================
-  //     LẤY BÌNH LUẬN THEO ID
-  // ==============================
-  useEffect(() => {
+  // ============================
+  //        LẤY BÌNH LUẬN
+  // ============================
+  const loadComments = () => {
     if (!article?.id) return;
+
     axios
-      .get(`http://localhost:8081/comments/${article.id}`)
-      .then((res) => {
-        if (res.data.success) setComments(res.data.comments);
-      })
-      .catch(() => console.error("Lỗi khi tải bình luận"));
-  }, [article]);
-
-  // ==============================
-  //       GỬI BÌNH LUẬN
-  // ==============================
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return alert("Vui lòng nhập bình luận!");
-
-    try {
-      const res = await axios.post("http://localhost:8081/comments", {
-        article_id: article.id,
-        user_email: userEmail,
-        content: newComment,
-      });
-
-      if (res.data.success) {
-        setNewComment("");
-
-        // Reload comments
-        const reload = await axios.get(
-          `http://localhost:8081/comments/${article.id}`
-        );
-        if (reload.data.success) setComments(reload.data.comments);
-      }
-    } catch (err) {
-      console.error("Lỗi khi gửi bình luận:", err);
-    }
+      .get(
+        `http://localhost:8081/comments/${article.id}${
+          filter === "new" ? "?sort=new" : ""
+        }`
+      )
+      .then((res) => res.data.success && setComments(res.data.comments));
   };
 
-  // ==============================
-  //    ĐỌC BÀI VIẾT (VIỆT NAM)
-  // ==============================
-  const handleRead = () => {
-    if (!article) return;
+  useEffect(() => {
+    loadComments();
+  }, [article, filter]);
 
-    const fullText =
+  // ============================
+  //        GỬI BÌNH LUẬN
+  // ============================
+  const submitComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    await axios.post("http://localhost:8081/comments", {
+      article_id: article.id,
+      user_email: userEmail,
+      content: newComment,
+    });
+
+    setNewComment("");
+    loadComments();
+  };
+
+  // ============================
+  //        GỬI TRẢ LỜI
+  // ============================
+  const submitReply = async (parentId) => {
+    if (!replyContent.trim()) return;
+
+    await axios.post("http://localhost:8081/comments/reply", {
+      article_id: article.id,
+      parent_id: parentId,
+      user_email: userEmail,
+      content: replyContent,
+    });
+
+    setReplyContent("");
+    setActiveReply(null);
+    loadComments();
+  };
+
+  // ============================
+  //      LIKE / DISLIKE
+  // ============================
+  const handleLike = async (id) => {
+    await axios.post("http://localhost:8081/comments/like", { id });
+    loadComments();
+  };
+
+  const handleDislike = async (id) => {
+    await axios.post("http://localhost:8081/comments/dislike", { id });
+    loadComments();
+  };
+
+  // ============================
+  //     ĐỌC BÀI VIẾT
+  // ============================
+  const readArticle = () => {
+    const full =
       article.title +
       ". " +
       article.excerpt +
       ". " +
       article.content.replace(/<[^>]+>/g, " ");
 
-    const speech = new SpeechSynthesisUtterance(fullText);
-
-    speech.lang = "vi-VN"; // giọng tiếng Việt
-    speech.rate = 1;
-    speech.pitch = 1;
-
-    window.speechSynthesis.speak(speech);
+    const sp = new SpeechSynthesisUtterance(full);
+    sp.lang = "vi-VN";
+    sp.rate = 1;
+    window.speechSynthesis.speak(sp);
   };
 
-  const handleStop = () => {
-    window.speechSynthesis.cancel();
-  };
+  const stopRead = () => window.speechSynthesis.cancel();
 
-  // ==============================
-  //       UI LOADING + ERROR
-  // ==============================
-  if (loading) {
+  // ============================
+  //       UI LOADING / ERROR
+  // ============================
+  if (loading)
     return (
       <div className="text-center py-5">
-        <div className="spinner-border text-danger" role="status"></div>
+        <div className="spinner-border text-danger"></div>
       </div>
     );
-  }
 
-  if (!article) {
+  if (!article)
     return (
       <div className="text-center py-5">
-        <p className="text-muted">Bài viết không tồn tại hoặc đã bị xóa.</p>
-        <button
-          className="btn btn-outline-secondary mt-3"
-          onClick={() => navigate(-1)}
-        >
+        <p>Bài viết không tồn tại.</p>
+        <button onClick={() => navigate(-1)} className="btn btn-outline-dark">
           Quay lại
         </button>
       </div>
     );
-  }
 
-  // ==============================
-  //       GIAO DIỆN CHÍNH
-  // ==============================
+  // ==================================================
+  //               UI CHÍNH
+  // ==================================================
   return (
-    <section className="article-detail-area py-5">
-      <div className="container">
+    <section className="py-5">
+      <div className="container" style={{ maxWidth: 900 }}>
+        {/* BACK */}
         <button
           onClick={() => navigate(-1)}
           className="btn btn-outline-secondary mb-4"
-          style={{ borderRadius: "20px", fontSize: "14px", padding: "6px 16px" }}
+          style={{ borderRadius: 20 }}
         >
-          Quay lại
+           Quay lại
         </button>
 
-        {/* Nút nghe bài viết */}
-        <div className="mb-3">
-          <button className="btn btn-primary me-2" onClick={handleRead}>
+        {/* NGHE BÀI VIẾT */}
+        <div className="d-flex gap-2 mb-3">
+          <button className="btn btn-danger" onClick={readArticle}>
             Nghe bài viết
           </button>
-          <button className="btn btn-danger" onClick={handleStop}>
-            Dừng đọc
+          <button className="btn btn-dark" onClick={stopRead}>
+            Dừng
           </button>
         </div>
 
-        <div className="article-content">
-          <p className="text-danger fw-semibold mb-1">
-            {getCategoryName(article.category_id)} •{" "}
-            <span className="text-muted small">
-              {new Date(article.published_at).toLocaleTimeString("vi-VN")}{" "}
-              {new Date(article.published_at).toLocaleDateString("vi-VN")}
-            </span>{" "}
-            • {article.views} lượt xem
-          </p>
+        {/* TIÊU ĐỀ */}
+        <h1 className="fw-bold mb-3" style={{ fontSize: "2.2rem" }}>
+          {article.title}
+        </h1>
 
-          <h2 className="fw-bold mb-3">{article.title}</h2>
-          <p className="lead text-secondary mb-4">{article.excerpt}</p>
+        {/* NGÀY & VIEW */}
+        <div className="text-muted mb-4">
+          {new Date(article.published_at).toLocaleString("vi-VN")} •{" "}
 
-          <div className="text-center mb-4">
-            <img
-              src={getImageUrl(article.image)}
-              alt={article.title}
-              className="img-fluid rounded shadow-sm"
-              style={{ maxHeight: "550px", width: "100%", objectFit: "cover" }}
-            />
-          </div>
+          <span
+            className="badge bg-secondary mx-1"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate(`/category/${article.category_slug}`)}
+            title="Xem các bài viết cùng danh mục"
+          >
+            {article.category_name}
+          </span>
 
-          <div
-            className="article-body"
-            dangerouslySetInnerHTML={{ __html: article.content }}
-            style={{ fontSize: "18px", lineHeight: "1.8", color: "#333" }}
-          ></div>
 
-          <hr className="my-4" />
-          <p className="text-muted fst-italic">
-            Tác giả:{" "}
-            <span className="fw-semibold">{article.author || "Không rõ"}</span>
-          </p>
+          • <b>{article.views}</b> lượt xem
         </div>
 
-        {/* ==============================
-                     BÌNH LUẬN
-        ============================== */}
-        <div className="comments-section mt-5">
-          <h4>Bình luận ({comments.length})</h4>
 
-          <form onSubmit={handleCommentSubmit} className="mb-4">
+
+
+        <p className="lead text-secondary mb-4">{article.excerpt}</p>
+
+        {/* ẢNH LỚN */}
+        <div className="text-center mb-4">
+          <img
+            src={getImageUrl(article.image)}
+            className="img-fluid rounded shadow-sm"
+            style={{ width: "100%", maxHeight: 520, objectFit: "cover" }}
+          />
+        </div>
+
+        {/* NỘI DUNG */}
+        <div
+          dangerouslySetInnerHTML={{ __html: article.content }}
+          style={{ fontSize: 19, lineHeight: "1.9" }}
+        ></div>
+
+        {/* TÁC GIẢ */}
+        <hr />
+        <p className="text-muted fst-italic">
+          Tác giả: <b>{article.author || "Không rõ"}</b>
+        </p>
+
+        {/* ============================================
+                      BÌNH LUẬN
+        ============================================= */}
+        <div className="mt-5">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h4 className="fw-bold">Bình luận ({comments.length})</h4>
+
+            {/* FILTER */}
+            <select
+              className="form-select"
+              style={{ width: 180, borderRadius: 12 }}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="all">Tất cả bình luận</option>
+              <option value="new">Mới nhất</option>
+            </select>
+          </div>
+
+          {/* FORM BÌNH LUẬN */}
+          <form onSubmit={submitComment} className="mb-4">
             <textarea
-              className="form-control"
               rows="3"
-              placeholder="Nhập bình luận của bạn..."
+              className="form-control"
+              placeholder="Nhập bình luận..."
+              style={{ borderRadius: 12 }}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
             ></textarea>
-            <button type="submit" className="btn btn-primary mt-2">
+
+            <button className="btn btn-primary mt-2 px-4 rounded-pill">
               Gửi bình luận
             </button>
           </form>
 
-          {comments.length === 0 ? (
-            <p className="text-muted">Chưa có bình luận nào.</p>
-          ) : (
-            comments.map((cmt) => (
-              <div key={cmt.id} className="border rounded p-3 mb-2">
-                <p className="fw-bold mb-1">{cmt.user_email || "Ẩn danh"}</p>
-                <p className="mb-1">{cmt.content}</p>
-                <small className="text-muted">
-                  {new Date(cmt.created_at).toLocaleString("vi-VN")}
-                </small>
-              </div>
-            ))
-          )}
+          {/* LIST BÌNH LUẬN */}
+          {comments.map((c) => (
+            <CommentItem
+              key={c.id}
+              comment={c}
+              activeReply={activeReply}
+              setActiveReply={setActiveReply}
+              replyContent={replyContent}
+              setReplyContent={setReplyContent}
+              submitReply={submitReply}
+              handleLike={handleLike}
+              handleDislike={handleDislike}
+            />
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-// Mapping danh mục
-function getCategoryName(id) {
-  const mapping = {
-    1: "Chính trị",
-    2: "Thể thao",
-    3: "Giải trí",
-    4: "Công nghệ",
-    5: "Kinh tế",
-    6: "Đời sống",
-    7: "Môi trường",
-  };
-  return mapping[id] || "Tin tức";
+// =====================================================
+// COMPONENT COMMENT ITEM (HỖ TRỢ REPLY CẤP 1)
+// =====================================================
+function CommentItem({
+  comment,
+  activeReply,
+  setActiveReply,
+  replyContent,
+  setReplyContent,
+  submitReply,
+  handleLike,
+  handleDislike,
+}) {
+  return (
+    <div
+      className="p-3 mb-3 shadow-sm bg-white"
+      style={{ borderRadius: 14, border: "1px solid #eee" }}
+    >
+      <b>{comment.user_email}</b>
+
+      <p className="mb-1" style={{ fontSize: 16 }}>
+        {comment.content}
+      </p>
+
+      <small className="text-muted">
+        {new Date(comment.created_at).toLocaleString("vi-VN")}
+      </small>
+
+      {/* LIKE / DISLIKE */}
+      <div className="mt-2 d-flex gap-3">
+        <button
+          className="btn btn-sm btn-outline-primary"
+          onClick={() => handleLike(comment.id)}
+        >
+          Thích ({comment.likes})
+        </button>
+
+        <button
+          className="btn btn-sm btn-outline-danger"
+          onClick={() => handleDislike(comment.id)}
+        >
+          Không thích ({comment.dislikes})
+        </button>
+
+        <button
+          className="btn btn-sm btn-outline-secondary"
+          onClick={() =>
+            setActiveReply(activeReply === comment.id ? null : comment.id)
+          }
+        >
+          Trả lời
+        </button>
+      </div>
+
+      {/* FORM REPLY */}
+      {activeReply === comment.id && (
+        <div className="mt-3">
+          <textarea
+            className="form-control"
+            rows="2"
+            style={{ borderRadius: 10 }}
+            placeholder="Nhập trả lời..."
+            value={replyContent}
+            onChange={(e) => setReplyContent(e.target.value)}
+          ></textarea>
+
+          <button
+            className="btn btn-primary btn-sm mt-2 rounded-pill"
+            onClick={() => submitReply(comment.id)}
+          >
+            Gửi trả lời
+          </button>
+        </div>
+      )}
+
+      {/* Danh sách replies */}
+      {comment.replies &&
+        comment.replies.map((r) => (
+          <div
+            key={r.id}
+            className="mt-3 ms-4 p-2 bg-light border rounded"
+            style={{ borderRadius: 12 }}
+          >
+            <b>{r.user_email}</b>
+            <p className="mb-1">{r.content}</p>
+            <small className="text-muted">
+              {new Date(r.created_at).toLocaleString("vi-VN")}
+            </small>
+          </div>
+        ))}
+    </div>
+  );
 }
+
+// =====================================================
+//       DANH MỤC
+// =====================================================
+// function getCategoryName(id) {
+//   const list = {
+//     1: "Công Nghệ",
+//     2: "Kinh Tế",
+//     3: "Y Tế",
+//     4: "Giải trí",
+//     5: "Chính Trị",
+//     6: "Đời sống",
+//     7: "Môi trường",
+//   };
+//   return list[id] || "Tin tức";
+// }
 
 export default ArticleDetail;

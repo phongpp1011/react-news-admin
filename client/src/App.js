@@ -9,6 +9,7 @@ import ArticleDetail from "./components/ArticleDetail/ArticleDetail";
 import CategoryPage from "./components/CategoryPage/CategoryPage";
 import SearchResult from "./components/SearchResult/SearchResult";
 import EditArticle from "./components/AdminDashboard/Articles/EditArticle";
+import CategoriesList from"./components/AdminDashboard/Categories/CategoriesList";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 // 🔹 Hàm đọc role an toàn
@@ -37,6 +38,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/article/:slug" element={<ArticleDetail />} />
         <Route path="/category/:slug" element={<CategoryPage />} />
+        
         <Route path="/search" element={<SearchResult />} />
 
         {/* ✅ Login kiểm tra role */}
@@ -83,6 +85,7 @@ function App() {
           path="/admin/articles/edit/:id"
           element={role === "admin" ? <EditArticle /> : <Navigate to="/login" replace />}
         />
+         <Route path="categories" element={<CategoriesList />} />
 
 
         {/* ✅ 404 → Home */}

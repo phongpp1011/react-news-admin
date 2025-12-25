@@ -11,8 +11,8 @@ function AddArticle({ userEmail }) {
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState(EditorState.createEmpty());
-  const [image, setImage] = useState(""); // đường dẫn server
-  const [preview, setPreview] = useState(null); // preview ảnh
+  const [image, setImage] = useState("");
+  const [preview, setPreview] = useState(null);
   const [categoryId, setCategoryId] = useState("");
   const [status, setStatus] = useState("draft");
   const [categories, setCategories] = useState([]);
@@ -35,12 +35,10 @@ function AddArticle({ userEmail }) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Hiển thị preview trước khi upload
     const reader = new FileReader();
     reader.onloadend = () => setPreview(reader.result);
     reader.readAsDataURL(file);
 
-    // Upload file
     const formData = new FormData();
     formData.append("image", file);
 
@@ -56,19 +54,23 @@ function AddArticle({ userEmail }) {
     e.preventDefault();
     try {
       const htmlContent = draftToHtml(convertToRaw(content.getCurrentContent()));
+
+      // Fallback email: nếu userEmail rỗng/null => dùng VNExpress@rss.com
+      const author_email = userEmail && userEmail.trim() !== "" ? userEmail : "VNExpress@rss.com";
+
       const res = await axios.post("http://localhost:8081/articles", {
         title,
         slug,
         excerpt,
         content: htmlContent,
         image,
-        category_id: categoryId,
+        category_id: categoryId || null,
         status,
-        author_email: userEmail, // gửi email tác giả
+        author_email,
       });
 
       if (res.data.success) {
-        alert("Thêm bài viết thành công!");
+        alert("Thêm bài viết thành công! Bài sẽ chờ admin duyệt.");
         navigate("/admin/articles");
       } else {
         alert("Lỗi khi thêm bài viết!");

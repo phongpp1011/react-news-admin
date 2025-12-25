@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+
 
 function AdminSidebar() {
   return (
@@ -24,6 +26,10 @@ function AdminSidebar() {
           <span>Danh sách bài viết</span>
         </a>
       </li>
+      {/* <li>
+        <a href="/admin/pending-articles">Duyệt bài viết</a>
+      </li> */}
+
 
       {/*  Thêm bài viết mới */}
       <li className="nav-item">
@@ -32,9 +38,15 @@ function AdminSidebar() {
         </a>
       </li>
 
+       <li className="nav-item">
+        <Link className="nav-link" to="/admin/categories">
+          <span>Quản lý danh mục</span>
+        </Link>
+      </li>
+
       <li className="nav-item">
         <a className="nav-link" href="/admin/users">
-          <span>Người dùng</span>
+          <span>Quản lý Người dùng</span>
         </a>
       </li>
 

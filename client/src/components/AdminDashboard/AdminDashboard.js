@@ -6,6 +6,10 @@ import AdminFooter from "./AdminFooter";
 import ArticlesList from "./Articles/ArticlesList";
 import AddArticle from "./Articles/AddArticle";
 import CommentsList from "./Comments/CommentsList"; //  Thêm import
+import UsersList from "./Users/UsersList";
+import CategoriesList from "./Categories/CategoriesList";
+// import PendingArticles from "./Articles/PendingArticles";
+
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -154,9 +158,15 @@ function AdminDashboard({ setRole }) {
 
               {/* Thêm bài viết */}
               <Route path="articles/add" element={<AddArticle />} />
+              {/* ===== DANH MỤC ===== */}
+              <Route path="categories" element={<CategoriesList />} />
 
               {/*  Quản lý bình luận */}
               <Route path="comments" element={<CommentsList />} />
+
+              <Route path="users" element={<UsersList />} />
+
+                {/* <Route path="/pending-articles" element={<PendingArticles />} /> */}
             </Routes>
           </div>
         </div>

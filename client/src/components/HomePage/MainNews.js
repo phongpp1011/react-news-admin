@@ -9,15 +9,14 @@ function MainNews() {
   const [loading, setLoading] = useState(true);
 
   const getImageUrl = (image) => {
-    if (!image) return "/default.jpg"; // ảnh mặc định nếu không có
+    if (!image) return "/default.jpg";
     return image.startsWith("http") ? image : `http://localhost:8081/${image.replace(/^\//, "")}`;
   };
 
   useEffect(() => {
     const fetchArticles = async () => {
-      setLoading(true);
       try {
-        const res = await axios.get("http://localhost:8081/articles/main"); // lấy 5 bài mới nhất từ DB
+        const res = await axios.get("http://localhost:8081/articles/main");
         if (res.data.success) setArticles(res.data.articles || []);
       } catch (err) {
         console.error("Lỗi khi tải main news:", err);
@@ -45,41 +44,66 @@ function MainNews() {
   return (
     <section className="main-news-area pt-4 pb-4">
       <div className="container">
-        <div className="row">
+        <div className="row g-4">
 
+          {/* ======= Cột bài phụ ======= */}
           <div className="col-lg-4 col-md-5">
-            <div className="d-flex flex-column gap-3">
+            <div className="d-flex flex-column gap-4">
+
               {sideArticles.map((item) => (
-                <Link key={item.id} to={`/article/${item.slug}`}
-                  className="d-flex gap-3 text-decoration-none text-dark">
+                <Link
+                  key={item.id}
+                  to={`/article/${item.slug}`}
+                  className="d-flex gap-3 text-decoration-none align-items-start side-news-item"
+                >
                   <img
                     src={getImageUrl(item.image)}
                     alt={item.title}
-                    style={{ width: 100, height: 70, objectFit: "cover", borderRadius: 4 }}
+                    className="rounded"
+                    style={{
+                      width: 110,
+                      height: 80,
+                      objectFit: "cover",
+                      borderRadius: 8,
+                    }}
                   />
-                  <p className="mb-0">{item.title}</p>
+
+                  <div>
+                    <h6 className="fw-semibold text-dark mb-1 hover-title">
+                      {item.title}
+                    </h6>
+                    <span className="text-muted small">
+                      {new Date(item.published_at).toLocaleDateString("vi-VN")}
+                    </span>
+                  </div>
                 </Link>
               ))}
+
             </div>
           </div>
 
-          <div className="col-lg-8 col-md-7 mt-3 mt-md-0">
-            <div className="card border-0 shadow-sm">
+          {/* ======= Bài chính ======= */}
+          <div className="col-lg-8 col-md-7">
+            <div className="main-article-card">
               <Link to={`/article/${mainArticle.slug}`}>
-                <img
-                  src={getImageUrl(mainArticle.image)}
-                  alt={mainArticle.title}
-                  className="card-img-top"
-                  style={{ height: 350, objectFit: "cover" }}
-                />
+                <div className="main-article-image">
+                  <img
+                    src={getImageUrl(mainArticle.image)}
+                    alt={mainArticle.title}
+                    className="img-fluid"
+                  />
+                </div>
               </Link>
-              <div className="card-body">
-                <h5>
-                  <Link to={`/article/${mainArticle.slug}`} className="text-dark text-decoration-none">
-                    {mainArticle.title}
-                  </Link>
-                </h5>
-                <p className="text-muted small">{mainArticle.excerpt}</p>
+
+              <div className="p-3 pt-3">
+                <Link
+                  to={`/article/${mainArticle.slug}`}
+                  className="text-decoration-none"
+                >
+                  <h2 className="main-title">{mainArticle.title}</h2>
+                </Link>
+
+                <p className="text-muted mt-2 fs-6">{mainArticle.excerpt}</p>
               </div>
             </div>
           </div>

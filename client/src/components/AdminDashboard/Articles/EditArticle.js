@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { EditorState, convertToRaw, ContentState, convertFromHTML } from "draft-js";
+import { EditorState, convertToRaw, ContentState } from "draft-js";
 import { Editor } from "react-draft-wysiwyg";
 import draftToHtml from "draftjs-to-html";
 import htmlToDraft from "html-to-draftjs";
@@ -18,30 +18,36 @@ function EditArticle() {
   const [image, setImage] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [status, setStatus] = useState("draft");
+  const [authorEmail, setAuthorEmail] = useState(""); // thêm author_email
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   // Lấy danh mục
   useEffect(() => {
-    axios.get("http://localhost:8081/categories")
-      .then(res => res.data.success && setCategories(res.data.categories));
+    axios
+      .get("http://localhost:8081/categories")
+      .then((res) => res.data.success && setCategories(res.data.categories))
+      .catch((err) => console.error(err));
   }, []);
 
   // Lấy dữ liệu bài viết
   useEffect(() => {
-    axios.get(`http://localhost:8081/admin/articles/${id}`)
-      .then(res => {
+    axios
+      .get(`http://localhost:8081/admin/articles/${id}`)
+      .then((res) => {
         if (res.data.success) {
           const article = res.data.article;
+
           setTitle(article.title || "");
           setSlug(article.slug || "");
           setExcerpt(article.excerpt || "");
           setImage(article.image || "");
           setCategoryId(article.category_id || "");
           setStatus(article.status || "draft");
+          setAuthorEmail(article.author_email || "Khách"); // lưu email tác giả
 
-          // EditorState từ HTML
+          // Chuyển HTML sang DraftJS
           const blocksFromHtml = htmlToDraft(article.content || "");
           const { contentBlocks, entityMap } = blocksFromHtml;
           const contentState = ContentState.createFromBlockArray(contentBlocks, entityMap);
@@ -53,7 +59,7 @@ function EditArticle() {
           navigate("/admin/articles");
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         alert("Lỗi khi tải dữ liệu bài viết!");
         navigate("/admin/articles");
@@ -64,6 +70,7 @@ function EditArticle() {
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
     const formData = new FormData();
     formData.append("image", file);
 
@@ -82,7 +89,16 @@ function EditArticle() {
 
     const content = draftToHtml(convertToRaw(editorState.getCurrentContent()));
 
-    const payload = { title, slug, excerpt, content, image, category_id: categoryId, status };
+    const payload = {
+      title,
+      slug,
+      excerpt,
+      content,
+      image,
+      category_id: categoryId,
+      status,
+      author_email: authorEmail, // gửi kèm author_email
+    };
 
     try {
       const res = await axios.put(`http://localhost:8081/admin/articles/${id}`, payload);
@@ -108,17 +124,32 @@ function EditArticle() {
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label>Tiêu đề:</label>
-          <input type="text" className="form-control" value={title} onChange={e => setTitle(e.target.value)} required />
+          <input
+            type="text"
+            className="form-control"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
         </div>
 
         <div className="mb-3">
           <label>Slug (tùy chọn):</label>
-          <input type="text" className="form-control" value={slug} onChange={e => setSlug(e.target.value)} />
+          <input
+            type="text"
+            className="form-control"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+          />
         </div>
 
         <div className="mb-3">
           <label>Excerpt (tóm tắt):</label>
-          <textarea className="form-control" value={excerpt} onChange={e => setExcerpt(e.target.value)} />
+          <textarea
+            className="form-control"
+            value={excerpt}
+            onChange={(e) => setExcerpt(e.target.value)}
+          />
         </div>
 
         <div className="mb-3">
@@ -139,21 +170,29 @@ function EditArticle() {
 
         <div className="mb-3">
           <label>Danh mục:</label>
-          <select className="form-select" value={categoryId} onChange={e => setCategoryId(e.target.value)}>
+          <select
+            className="form-select"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+          >
             <option value="">-- Chọn danh mục --</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
             ))}
           </select>
         </div>
 
         <div className="mb-3">
           <label>Trạng thái:</label>
-          <select className="form-select" value={status} onChange={e => setStatus(e.target.value)}>
+          <select className="form-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="pending">Chờ duyệt</option>
             <option value="draft">Bản nháp</option>
             <option value="published">Xuất bản</option>
           </select>
         </div>
+
 
         <button type="submit" className="btn btn-success" disabled={saving}>
           {saving ? "Đang lưu..." : "Cập nhật bài viết"}

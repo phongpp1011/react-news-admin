@@ -10,7 +10,7 @@ function ArticlesList() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
-
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     fetchArticles(page);
@@ -18,16 +18,23 @@ function ArticlesList() {
 
   // Lọc realtime khi search thay đổi
   useEffect(() => {
-    if (!search.trim()) {
-      setFiltered(articles);
-    } else {
-      setFiltered(
-        articles.filter((item) =>
-          item.title.toLowerCase().includes(search.toLowerCase())
-        )
-      );
-    }
-  }, [search, articles]);
+  let result = articles;
+
+  // Lọc theo tiêu đề
+  if (search.trim()) {
+    result = result.filter(item =>
+      item.title.toLowerCase().includes(search.toLowerCase())
+    );
+  }
+
+  // Lọc theo trạng thái
+  if (statusFilter !== "all") {
+    result = result.filter(item => item.status === statusFilter);
+  }
+
+  setFiltered(result);
+}, [search, statusFilter, articles]);
+
 
   const fetchArticles = async (pageNumber) => {
     try {
@@ -62,7 +69,8 @@ function ArticlesList() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await axios.put(`http://localhost:8081/articles/${id}`, {
+      // Sử dụng route admin để update (bảo đảm quyền)
+      await axios.put(`http://localhost:8081/admin/articles/${id}`, {
         status: newStatus,
       });
 
@@ -73,14 +81,38 @@ function ArticlesList() {
     }
   };
 
+  const handleApprove = async (id) => {
+    if (!window.confirm("Bạn chắc chắn muốn duyệt và xuất bản bài này?")) return;
+    try {
+      const res = await axios.put(`http://localhost:8081/admin/articles/approve/${id}`);
+      if (res.data.success) {
+        alert(res.data.message || "Đã duyệt bài");
+        fetchArticles(page);
+      } else {
+        alert(res.data.message || "Duyệt thất bại");
+      }
+    } catch (err) {
+      console.error("Lỗi khi duyệt bài:", err);
+      alert("Lỗi khi duyệt bài");
+    }
+  };
+
   const getImageUrl = (img) =>
     img ? `http://localhost:8081${img}` : "/noimage.png";
 
+  // helper hiển thị badge màu theo trạng thái
+  const renderStatusBadge = (status) => {
+    const map = {
+      pending: { label: "Chờ duyệt", className: "badge bg-warning text-dark" },
+      draft: { label: "Bản nháp", className: "badge bg-secondary" },
+      published: { label: "Xuất bản", className: "badge bg-success" },
+    };
+    const v = map[status] || { label: status, className: "badge bg-light text-dark" };
+    return <span className={v.className}>{v.label}</span>;
+  };
+
   return (
-    
-
     <div className="container mt-4">
-
       <button
         className="btn btn-secondary mb-3"
         onClick={() => navigate("/admin")}
@@ -88,16 +120,16 @@ function ArticlesList() {
         Quay lại Admin
       </button>
 
-<button
-  className="btn btn-success mb-3"
-  onClick={() => {
-    axios.get("http://localhost:8081/aggregate/rss")
-      .then(res => alert("Đã tổng hợp " + res.data.count + " bài!"))
-      .catch(() => alert("Lỗi khi tổng hợp tin tức!"));
-  }}
->
-   Tổng hợp bài từ VNExpress
-</button>
+      <button
+        className="btn btn-success mb-3 ms-2"
+        onClick={() => {
+          axios.get("http://localhost:8081/aggregate/rss")
+            .then(res => alert("Đã tổng hợp " + res.data.count + " bài!"))
+            .catch(() => alert("Lỗi khi tổng hợp tin tức!"));
+        }}
+      >
+        Tổng hợp bài từ các nguồn khác
+      </button>
 
       <h2>Quản lý bài viết</h2>
 
@@ -111,6 +143,19 @@ function ArticlesList() {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
+     <div className="mb-3">
+        <select
+          className="form-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option value="pending">Chờ duyệt</option>
+          <option value="draft">Bản nháp</option>
+          <option value="published">Xuất bản</option>
+        </select>
+      </div>
+ 
 
       <div className="text-end mb-3">
         <Link to="/admin/articles/add" className="btn btn-primary">
@@ -151,20 +196,13 @@ function ArticlesList() {
               <td>{item.views}</td>
 
               <td>
-                <select
-                  value={item.status}
-                  className="form-select form-select-sm"
-                  onChange={(e) =>
-                    handleStatusChange(item.id, e.target.value)
-                  }
-                >
-                  <option value="draft">Bản nháp</option>
-                  <option value="published">Xuất bản</option>
-                </select>
+                
+                  {renderStatusBadge(item.status)}
+                  
               </td>
 
               <td>
-                {new Date(item.published_at).toLocaleDateString("vi-VN")}
+                {item.published_at ? new Date(item.published_at).toLocaleDateString("vi-VN") : (new Date(item.created_at).toLocaleDateString("vi-VN"))}
               </td>
 
               <td>
@@ -176,11 +214,20 @@ function ArticlesList() {
                 </Link>
 
                 <button
-                  className="btn btn-danger btn-sm"
+                  className="btn btn-danger btn-sm me-2"
                   onClick={() => deleteArticle(item.id)}
                 >
                   Xóa
                 </button>
+
+                {item.status === "pending" && (
+                  <button
+                    className="btn btn-success btn-sm"
+                    onClick={() => handleApprove(item.id)}
+                  >
+                    Duyệt
+                  </button>
+                )}
               </td>
             </tr>
           ))}
@@ -208,7 +255,6 @@ function ArticlesList() {
         <span>
           Trang {page} / {totalPages}
         </span>
-        
 
         <button
           className="btn btn-outline-dark"
